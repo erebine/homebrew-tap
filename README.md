@@ -20,11 +20,14 @@ brew tap xerotier/tap
 brew install xeroctl
 brew install xerotier-xim-agent
 brew install xerotier-xem-agent
+brew install --cask xerotier-desktop
 ```
 
 * The first command adds this tap.
-* The remaining commands install the binaries; Homebrew pulls in the
+* The next three commands install the binaries; Homebrew pulls in the
   `zeromq` and `zstd` libraries the agents link against.
+* The last command installs the Xerotier Desktop app (Apple Silicon,
+  macOS 15 or newer) from the notarized DMG.
 
 Single-command form:
 
@@ -34,11 +37,12 @@ brew install xerotier/tap/xeroctl
 
 ## Packages
 
-| Formula | Binary | Dependencies |
+| Formula | Installs | Dependencies |
 | --- | --- | --- |
 | `xeroctl` | `xeroctl` | zstd |
 | `xerotier-xim-agent` | `xerotier-xim-agent` | zeromq, zstd |
 | `xerotier-xem-agent` | `xerotier-xem-agent` | zeromq, zstd |
+| `xerotier-desktop` (cask) | `Xerotier.app` | none (DMG bundles its libraries) |
 
 Documentation for running the binaries can be found in the
 [docs](https://xerotier.ai/docs/private-agents).
@@ -53,4 +57,5 @@ git commit -am "pin formulas to <tag>"
 ```
 
 The script resolves the latest stable tag, downloads each asset, and
-rewrites the version, URLs, and sha256 checksums in `Formula/`.
+rewrites the version, URLs, and sha256 checksums in `Formula/` and
+`Casks/`.

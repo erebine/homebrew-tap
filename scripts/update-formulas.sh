@@ -57,4 +57,15 @@ for name in xeroctl xerotier-xim-agent xerotier-xem-agent; do
   done
 done
 
-echo "==> formulas pinned to ${TAG}; review and commit Formula/"
+CASK="$HERE/../Casks/xerotier-desktop.rb"
+echo "==> xerotier-desktop cask (${TAG})"
+sedi "s/^  version \".*\"/  version \"${VERSION}\"/" "$CASK"
+sedi "s|/releases/download/[^/]*/|/releases/download/${TAG}/|g" "$CASK"
+sedi "s|Xerotier-Desktop-[^\"]*\.dmg|Xerotier-Desktop-${VERSION}.dmg|" "$CASK"
+curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/Xerotier-Desktop.dmg" \
+  "https://github.com/${REPO}/releases/download/${TAG}/Xerotier-Desktop-${VERSION}.dmg"
+sum="$(sha256 "$TMP/Xerotier-Desktop.dmg")"
+sedi "s|^  sha256 \".*\"|  sha256 \"${sum}\"|" "$CASK"
+echo "    Xerotier-Desktop-${VERSION}.dmg: ${sum}"
+
+echo "==> formulas and cask pinned to ${TAG}; review and commit Formula/ and Casks/"
