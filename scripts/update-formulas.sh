@@ -60,17 +60,18 @@ done
 CASK="$HERE/../Casks/xerotier-desktop.rb"
 echo "==> xerotier-desktop cask (${TAG})"
 # The DMG is signed and uploaded from a mac, so it can lag the CI-built
-# binaries; pin the cask only when the asset exists.
+# binaries; pin the cask only when the asset exists. The DMG file name
+# carries the full tag (Xerotier-Desktop-v0.0.1.dmg), not the bare version.
 if curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/Xerotier-Desktop.dmg" \
-  "https://github.com/${REPO}/releases/download/${TAG}/Xerotier-Desktop-${VERSION}.dmg"; then
+  "https://github.com/${REPO}/releases/download/${TAG}/Xerotier-Desktop-${TAG}.dmg"; then
   sedi "s/^  version \".*\"/  version \"${VERSION}\"/" "$CASK"
   sedi "s|/releases/download/[^/]*/|/releases/download/${TAG}/|g" "$CASK"
-  sedi "s|Xerotier-Desktop-[^\"]*\.dmg|Xerotier-Desktop-${VERSION}.dmg|" "$CASK"
+  sedi "s|Xerotier-Desktop-[^\"]*\.dmg|Xerotier-Desktop-${TAG}.dmg|" "$CASK"
   sum="$(sha256 "$TMP/Xerotier-Desktop.dmg")"
   sedi "s|^  sha256 \".*\"|  sha256 \"${sum}\"|" "$CASK"
-  echo "    Xerotier-Desktop-${VERSION}.dmg: ${sum}"
+  echo "    Xerotier-Desktop-${TAG}.dmg: ${sum}"
 else
-  echo "    WARN: Xerotier-Desktop-${VERSION}.dmg not in ${TAG}; cask left unpinned"
+  echo "    WARN: Xerotier-Desktop-${TAG}.dmg not in ${TAG}; cask left unpinned"
 fi
 
 echo "==> formulas and cask pinned to ${TAG}; review and commit Formula/ and Casks/"
