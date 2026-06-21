@@ -4,7 +4,7 @@
 class XerotierXimAgent < Formula
   desc "Xerotier XIM inference agent"
   homepage "https://xerotier.ai"
-  version "0.0.3"
+  version "0.1.0"
   license "MIT"
 
   depends_on "zeromq"
@@ -12,14 +12,14 @@ class XerotierXimAgent < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/Xerotier/binaries/releases/download/v0.0.3/xerotier-xim-agent-Darwin-arm64"
+      url "https://github.com/Xerotier/binaries/releases/download/v0.1.0/xerotier-xim-agent-Darwin-arm64"
       sha256 "7daa8e2b5c3270ce74645e67d7b05da914cb3f01ab2d717567b2aec72f555f83"
     end
   end
 
   on_linux do
-    url "https://github.com/Xerotier/binaries/releases/download/v0.0.3/xerotier-xim-agent-Linux-x86_64"
-    sha256 "6975efcc87e407eae3ad449a50921d42ae2bf45782f8d52e395a73b525057b9c"
+    url "https://github.com/Xerotier/binaries/releases/download/v0.1.0/xerotier-xim-agent-Linux-x86_64"
+    sha256 "fe6fd1da65989de3b06ae63cce412e76bb0dcd1e48dbcb16f0cf9c2f2eb124ab"
   end
 
   def install
