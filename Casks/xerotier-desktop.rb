@@ -2,10 +2,10 @@
 # Prebuilt Xerotier Desktop app from Xerotier/binaries releases.
 # Pin to the latest stable release with scripts/update-formulas.sh.
 cask "xerotier-desktop" do
-  version "0.1.0"
-  sha256 "b221f3a0aace93a48bd98fe9a5e9795f8abb541997f2a88bbf8180404acdf0be"
+  version "0.3.9"
+  sha256 "0ed5c08b674cbe69ed37d7ee62c583290e1d20fdfcd77a191c1e863e4aaafd22"
 
-  url "https://github.com/Xerotier/binaries/releases/download/v0.1.0/Xerotier-Desktop-v0.1.0.dmg"
+  url "https://github.com/Xerotier/binaries/releases/download/v0.3.9/Xerotier-Desktop-v0.3.9.dmg"
   name "Xerotier Desktop"
   desc "Desktop app for the Xerotier platform"
   homepage "https://xerotier.ai"

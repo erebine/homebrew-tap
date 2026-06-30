@@ -4,7 +4,7 @@
 class XerotierXemAgent < Formula
   desc "Xerotier XEM execution agent"
   homepage "https://xerotier.ai"
-  version "0.1.0"
+  version "0.3.9"
   license "MIT"
 
   depends_on "zeromq"
@@ -12,14 +12,14 @@ class XerotierXemAgent < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/Xerotier/binaries/releases/download/v0.1.0/xerotier-xem-agent-Darwin-arm64"
-      sha256 "cfd2ef66df3d0c4f942bd225f50ec7982d90c86368c4d75db18045788ff32d59"
+      url "https://github.com/Xerotier/binaries/releases/download/v0.3.9/xerotier-xem-agent-Darwin-arm64"
+      sha256 "3dda01009aa181e6afaa12caa7162af3207417bbaa2f7cc60bc76d026481c67e"
     end
   end
 
   on_linux do
-    url "https://github.com/Xerotier/binaries/releases/download/v0.1.0/xerotier-xem-agent-Linux-x86_64"
-    sha256 "346699e677d4850bfa9dd5d93310aaa4703762ca4b9416decff9953ca3ef86b6"
+    url "https://github.com/Xerotier/binaries/releases/download/v0.3.9/xerotier-xem-agent-Linux-x86_64"
+    sha256 "332a1274e290866ada1eea18c400eb46186d06db38e1c8ab6f1563c3fb969a1e"
   end
 
   def install

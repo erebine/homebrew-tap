@@ -4,21 +4,21 @@
 class Xeroctl < Formula
   desc "Xerotier command-line client"
   homepage "https://xerotier.ai"
-  version "0.1.0"
+  version "0.3.9"
   license "MIT"
 
   depends_on "zstd"
 
   on_macos do
     on_arm do
-      url "https://github.com/Xerotier/binaries/releases/download/v0.1.0/xeroctl-Darwin-arm64"
-      sha256 "977721367ba557dd2e67116df2e8ef2e5fc90b00465a584ca004ec193b1733d8"
+      url "https://github.com/Xerotier/binaries/releases/download/v0.3.9/xeroctl-Darwin-arm64"
+      sha256 "a19b0c4fbcd5093ac91f00ac75a90a4895241411722989a2da7cc06e95038a8c"
     end
   end
 
   on_linux do
-    url "https://github.com/Xerotier/binaries/releases/download/v0.1.0/xeroctl-Linux-x86_64"
-    sha256 "66f839b73eadff637ca49488c55a2fcc6b6c8af0ff8d8569d5d96cfc7b4e37aa"
+    url "https://github.com/Xerotier/binaries/releases/download/v0.3.9/xeroctl-Linux-x86_64"
+    sha256 "8de6b8259d084b53bbc3c9df2cb1adc126a865abff20489bc473f91af141bf4c"
   end
 
   def install
