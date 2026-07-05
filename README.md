@@ -1,55 +1,55 @@
-# Xerotier.ai Homebrew Tap
+# Erebine.ai Homebrew Tap
 
 <div style="text-align: center;">
-<img src="https://xerotier.ai/xerotier-ogimage.png" alt="Project Logo" width="50%">
+<img src="https://erebine.ai/erebine-ogimage.png" alt="Project Logo" width="50%">
 </div>
 
 A high-performance, accelerated intelligence platform.
 
-This tap installs the prebuilt Xerotier binaries: the `xeroctl` CLI, the
-XIM inference agent, and the XEM execution agent. Formulas are pinned to
+This tap installs the prebuilt Erebine binaries: the `erectl` CLI, the
+EIM inference agent, and the EEM execution agent. Formulas are pinned to
 the latest stable release of
-[Xerotier/binaries](https://github.com/Xerotier/binaries) (macOS Apple
+[Erebine/binaries](https://github.com/Erebine/binaries) (macOS Apple
 Silicon and Linux x86_64), and Homebrew resolves the runtime library
 dependencies.
 
 ## Getting Started
 
 ``` shell
-brew tap xerotier/tap
-brew install xeroctl
-brew install xerotier-xim-agent
-brew install xerotier-xem-agent
-brew install --cask xerotier-desktop
+brew tap erebine/tap
+brew install erectl
+brew install erebine-eim-agent
+brew install erebine-eem-agent
+brew install --cask erebine-desktop
 ```
 
 * The first command adds this tap.
 * The next three commands install the binaries; Homebrew pulls in the
   `zeromq` and `zstd` libraries the agents link against.
-* The last command installs the Xerotier Desktop app (Apple Silicon,
+* The last command installs the Erebine Desktop app (Apple Silicon,
   macOS 15 or newer) from the notarized DMG.
 
 Single-command form:
 
 ``` shell
-brew install xerotier/tap/xeroctl
+brew install erebine/tap/erectl
 ```
 
 ## Packages
 
 | Formula | Installs | Dependencies |
 | --- | --- | --- |
-| `xeroctl` | `xeroctl` | zstd |
-| `xerotier-xim-agent` | `xerotier-xim-agent` | zeromq, zstd |
-| `xerotier-xem-agent` | `xerotier-xem-agent` | zeromq, zstd |
-| `xerotier-desktop` (cask) | `Xerotier.app` | none (DMG bundles its libraries) |
+| `erectl` | `erectl` | zstd |
+| `erebine-eim-agent` | `erebine-eim-agent` | zeromq, zstd |
+| `erebine-eem-agent` | `erebine-eem-agent` | zeromq, zstd |
+| `erebine-desktop` (cask) | `Erebine.app` | none (DMG bundles its libraries) |
 
 Documentation for running the binaries can be found in the
-[docs](https://xerotier.ai/docs/private-agents).
+[docs](https://erebine.ai/docs/private-agents).
 
 ## Updating formulas (maintainers)
 
-After a new release of Xerotier/binaries:
+After a new release of Erebine/binaries:
 
 ``` shell
 scripts/update-formulas.sh

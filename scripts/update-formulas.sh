@@ -1,6 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: MIT
-# Pin every formula to the latest stable Xerotier/binaries release.
+# Pin every formula to the latest stable Erebine/binaries release.
 #
 # Resolves the latest release tag, downloads each formula's assets,
 # and rewrites the version, download URLs, and sha256 checksums in
@@ -13,7 +13,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 FORMULAE="$HERE/../Formula"
-REPO="Xerotier/binaries"
+REPO="Erebine/binaries"
 
 AUTH=()
 [ -n "${GH_TOKEN:-}" ] && AUTH=(-H "Authorization: Bearer ${GH_TOKEN}")
@@ -42,7 +42,7 @@ sha256() {
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-for name in xeroctl xerotier-xim-agent xerotier-xem-agent; do
+for name in erectl erebine-eim-agent erebine-eem-agent; do
   formula="$FORMULAE/${name}.rb"
   echo "==> ${name} (${TAG})"
   sedi "s/^  version \".*\"/  version \"${VERSION}\"/" "$formula"
@@ -57,21 +57,21 @@ for name in xeroctl xerotier-xim-agent xerotier-xem-agent; do
   done
 done
 
-CASK="$HERE/../Casks/xerotier-desktop.rb"
-echo "==> xerotier-desktop cask (${TAG})"
+CASK="$HERE/../Casks/erebine-desktop.rb"
+echo "==> erebine-desktop cask (${TAG})"
 # The DMG is signed and uploaded from a mac, so it can lag the CI-built
 # binaries; pin the cask only when the asset exists. The DMG file name
-# carries the full tag (Xerotier-Desktop-v0.0.1.dmg), not the bare version.
-if curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/Xerotier-Desktop.dmg" \
-  "https://github.com/${REPO}/releases/download/${TAG}/Xerotier-Desktop-${TAG}.dmg"; then
+# carries the full tag (Erebine-Desktop-v0.0.1.dmg), not the bare version.
+if curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/Erebine-Desktop.dmg" \
+  "https://github.com/${REPO}/releases/download/${TAG}/Erebine-Desktop-${TAG}.dmg"; then
   sedi "s/^  version \".*\"/  version \"${VERSION}\"/" "$CASK"
   sedi "s|/releases/download/[^/]*/|/releases/download/${TAG}/|g" "$CASK"
-  sedi "s|Xerotier-Desktop-[^\"]*\.dmg|Xerotier-Desktop-${TAG}.dmg|" "$CASK"
-  sum="$(sha256 "$TMP/Xerotier-Desktop.dmg")"
+  sedi "s|Erebine-Desktop-[^\"]*\.dmg|Erebine-Desktop-${TAG}.dmg|" "$CASK"
+  sum="$(sha256 "$TMP/Erebine-Desktop.dmg")"
   sedi "s|^  sha256 \".*\"|  sha256 \"${sum}\"|" "$CASK"
-  echo "    Xerotier-Desktop-${TAG}.dmg: ${sum}"
+  echo "    Erebine-Desktop-${TAG}.dmg: ${sum}"
 else
-  echo "    WARN: Xerotier-Desktop-${TAG}.dmg not in ${TAG}; cask left unpinned"
+  echo "    WARN: Erebine-Desktop-${TAG}.dmg not in ${TAG}; cask left unpinned"
 fi
 
 echo "==> formulas and cask pinned to ${TAG}; review and commit Formula/ and Casks/"

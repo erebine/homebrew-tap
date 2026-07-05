@@ -1,4 +1,4 @@
-# Xerotier Homebrew tap Makefile
+# Erebine Homebrew tap Makefile
 
 TAG ?=
 

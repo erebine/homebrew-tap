@@ -1,5 +1,5 @@
 ---
-# Pins the formulas and cask to the latest stable Xerotier/binaries
+# Pins the formulas and cask to the latest stable Erebine/binaries
 # release (or the tag given at dispatch) and commits the result to main.
 name: Pin formulas to release
 
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Xerotier/binaries release tag to pin (default latest stable)
+        description: Erebine/binaries release tag to pin (default latest stable)
         required: false
         type: string
 
@@ -27,7 +27,7 @@ jobs:
 
       - name: Commit and push
         run: |
-          VERSION="$(sed -n 's/^  version "\(.*\)"/\1/p' Formula/xeroctl.rb | head -1)"
+          VERSION="$(sed -n 's/^  version "\(.*\)"/\1/p' Formula/erectl.rb | head -1)"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula Casks
