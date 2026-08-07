@@ -13,7 +13,7 @@ class ErebineEimAgent < Formula
   on_macos do
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v1.3.0/erebine-eim-agent-Darwin-arm64"
-      sha256 "8b0fbdae2fe3069e2a696fc27d0e81f0b1d25d9eb0333b276f0f4b975d4f3865"
+      sha256 "0d8cf7b73d1457ef9976260da87ac513f127a04bac9f7bac8ca061391085cab8"
     end
   end
 

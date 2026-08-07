@@ -12,7 +12,7 @@ class Erectl < Formula
   on_macos do
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v1.3.0/erectl-Darwin-arm64"
-      sha256 "ef71ff916a900fe597e0cfaa3dde7971593f05aadc502b170313f74c40888c5d"
+      sha256 "5b28cd79ffeda149b585407307d281ea4e4b46bc8547e143194e6c98d5702516"
     end
   end
 
