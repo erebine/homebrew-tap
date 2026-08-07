@@ -4,7 +4,7 @@
 class ErebineEimAgent < Formula
   desc "Erebine EIM inference agent"
   homepage "https://erebine.ai"
-  version "0.3.13-1-gf93ede61a-2-gdb5d4a3ab"
+  version "1.3.0"
   license "MIT"
 
   depends_on "zeromq"
@@ -12,14 +12,14 @@ class ErebineEimAgent < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/Erebine/binaries/releases/download/v0.3.13-1-gf93ede61a-2-gdb5d4a3ab/erebine-eim-agent-Darwin-arm64"
-      sha256 "883caa332fd159c25b8bd0d8efd8813816c278d08166972b1f421ed7083af46a"
+      url "https://github.com/Erebine/binaries/releases/download/v1.3.0/erebine-eim-agent-Darwin-arm64"
+      sha256 "8b0fbdae2fe3069e2a696fc27d0e81f0b1d25d9eb0333b276f0f4b975d4f3865"
     end
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v0.3.13-1-gf93ede61a-2-gdb5d4a3ab/erebine-eim-agent-Linux-x86_64"
-    sha256 "5c649276bdbf268fc8201cee0d26ff6845fcfa1b34af8942bcc928732c7ce400"
+    url "https://github.com/Erebine/binaries/releases/download/v1.3.0/erebine-eim-agent-Linux-x86_64"
+    sha256 "40af7ca8b8018a54ba84f4e1a0a51f7b1414f1e17cc231a6103021e0b2be210e"
   end
 
   def install
