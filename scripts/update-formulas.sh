@@ -42,26 +42,32 @@ sha256() {
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
+# The formulas are Linux-only: Erebine/binaries has shipped Linux x86_64
+# assets alone since v1.10.2. Download before rewriting so a release that
+# is missing an asset, or is still uploading, leaves the formula untouched
+# instead of half-pinned to a version whose checksum was never computed.
 for name in erectl erebine-eim-agent erebine-eem-agent; do
   formula="$FORMULAE/${name}.rb"
+  asset="${name}-Linux-x86_64"
   echo "==> ${name} (${TAG})"
+  if ! curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/$asset" \
+    "https://github.com/${REPO}/releases/download/${TAG}/${asset}"; then
+    echo "    WARN: ${asset} not in ${TAG}; ${name} left unpinned"
+    continue
+  fi
+  sum="$(sha256 "$TMP/$asset")"
   sedi "s/^  version \".*\"/  version \"${VERSION}\"/" "$formula"
   sedi "s|/releases/download/[^/]*/|/releases/download/${TAG}/|g" "$formula"
-  for asset in "${name}-Darwin-arm64" "${name}-Linux-x86_64"; do
-    curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/$asset" \
-      "https://github.com/${REPO}/releases/download/${TAG}/${asset}"
-    sum="$(sha256 "$TMP/$asset")"
-    # Replace the sha256 line that follows this asset's url line.
-    sedi "\\|${asset}\"|{n;s|sha256 \".*\"|sha256 \"${sum}\"|;}" "$formula"
-    echo "    ${asset}: ${sum}"
-  done
+  sedi "s|^  sha256 \".*\"|  sha256 \"${sum}\"|" "$formula"
+  echo "    ${asset}: ${sum}"
 done
 
 CASK="$HERE/../Casks/erebine-desktop.rb"
 echo "==> erebine-desktop cask (${TAG})"
-# The DMG is signed and uploaded from a mac, so it can lag the CI-built
-# binaries; pin the cask only when the asset exists. The DMG file name
-# carries the full tag (Erebine-Desktop-v0.0.1.dmg), not the bare version.
+# No DMG has shipped since v1.10.1 and the cask is deprecated, so this
+# normally warns and moves on; it still re-pins if a release ever carries
+# a DMG again. The DMG file name carries the full tag
+# (Erebine-Desktop-v0.0.1.dmg), not the bare version.
 if curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/Erebine-Desktop.dmg" \
   "https://github.com/${REPO}/releases/download/${TAG}/Erebine-Desktop-${TAG}.dmg"; then
   sedi "s/^  version \".*\"/  version \"${VERSION}\"/" "$CASK"
@@ -74,4 +80,4 @@ else
   echo "    WARN: Erebine-Desktop-${TAG}.dmg not in ${TAG}; cask left unpinned"
 fi
 
-echo "==> formulas and cask pinned to ${TAG}; review and commit Formula/ and Casks/"
+echo "==> done (${TAG}); check the warnings above, then review and commit Formula/ and Casks/"
