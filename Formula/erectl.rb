@@ -4,22 +4,23 @@
 class Erectl < Formula
   desc "Erebine command-line client"
   homepage "https://erebine.ai"
-  version "1.10.0"
   license "MIT"
-
-  depends_on "zstd"
 
   on_macos do
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v1.10.0/erectl-Darwin-arm64"
+      version "1.10.0"
       sha256 "5326e39ed1047932c80b0e95c9637c98b8342e22752939ac4df9979d32b9f79b"
     end
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v1.10.0/erectl-Linux-x86_64"
-    sha256 "2abd4f9d9f8b120af6df364f104679c603f9ba242a0cee72d09277b217ca6cc3"
+    url "https://github.com/Erebine/binaries/releases/download/v2.0.0/erectl-Linux-x86_64"
+    version "2.0.0"
+    sha256 "37bb5c0850859e90ce2c0ef7e18634f1a7ad3b4d4e9c7d8f4dfe348a34efd667"
   end
+
+  depends_on "zstd"
 
   def install
     bin.install Dir["erectl-*"].first => "erectl"

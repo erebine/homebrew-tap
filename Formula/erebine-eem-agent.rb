@@ -4,23 +4,24 @@
 class ErebineEemAgent < Formula
   desc "Erebine EEM execution agent"
   homepage "https://erebine.ai"
-  version "1.10.0"
   license "MIT"
-
-  depends_on "zeromq"
-  depends_on "zstd"
 
   on_macos do
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v1.10.0/erebine-eem-agent-Darwin-arm64"
+      version "1.10.0"
       sha256 "50d9094b4d10bac9b5d30bc08fda75cd93faef9306ee3946661df7f64c068c70"
     end
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v1.10.0/erebine-eem-agent-Linux-x86_64"
-    sha256 "195bade35469629924f9ae3bee8ba1e710104f18fdbcd4a3f1f74ba1f90bfcb2"
+    url "https://github.com/Erebine/binaries/releases/download/v2.0.0/erebine-eem-agent-Linux-x86_64"
+    version "2.0.0"
+    sha256 "48110d81693369a101d533b24124b7bcba185ac08111fd1465e0d0892c7b7b93"
   end
+
+  depends_on "zeromq"
+  depends_on "zstd"
 
   def install
     bin.install Dir["erebine-eem-agent-*"].first => "erebine-eem-agent"
