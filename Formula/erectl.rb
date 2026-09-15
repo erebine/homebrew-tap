@@ -4,17 +4,22 @@
 class Erectl < Formula
   desc "Erebine command-line client"
   homepage "https://erebine.ai"
-  url "https://github.com/Erebine/binaries/releases/download/v1.13.0/erectl-Linux-x86_64"
-  version "1.13.0"
-  sha256 "59d8df8f74d5bdfaa57b236a4cbea8e6a7b9d0d934b2df22f7ae01b5aad84a2c"
   license "MIT"
 
-  # Erebine/binaries has shipped Linux x86_64 assets only since v1.10.2.
-  # There is no Darwin binary and no Linux arm64 binary to install, so
-  # refuse outright rather than leave users on a stale release or hand
-  # them a binary their CPU cannot exec.
-  depends_on arch: :x86_64
-  depends_on :linux
+  on_macos do
+    on_arm do
+      url "https://github.com/Erebine/binaries/releases/download/v1.10.0/erectl-Darwin-arm64"
+      version "1.10.0"
+      sha256 "5326e39ed1047932c80b0e95c9637c98b8342e22752939ac4df9979d32b9f79b"
+    end
+  end
+
+  on_linux do
+    url "https://github.com/Erebine/binaries/releases/download/v2.0.0/erectl-Linux-x86_64"
+    version "2.0.0"
+    sha256 "37bb5c0850859e90ce2c0ef7e18634f1a7ad3b4d4e9c7d8f4dfe348a34efd667"
+  end
+
   depends_on "zstd"
 
   def install

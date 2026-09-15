@@ -110,15 +110,62 @@ check_ruby_file() {
       return "$failed" ;;
   esac
 
-  # .../releases/download/<tag>/<asset>
-  tag="${url#"$ASSET_PREFIX"}"
-  tag="${tag%%/*}"
-  if [ -n "$version" ] && [ "$tag" != "v$version" ]; then
-    echo "FAIL $rel: version \"$version\" but url downloads from tag $tag"
-    echo "     The license and checksum then describe a different build."
+  # .../releases/download/<tag>/<asset>, for EVERY url in the file.
+  #
+  # A formula may carry one url per platform, each in its own on_macos or
+  # on_linux block with its own version, because the platforms are not always
+  # released together. Reading only the first pair would check one block and
+  # silently pass whatever the others say -- which is worse than failing,
+  # because the build goes green while a url nobody looked at points at a
+  # release that may not exist. Each url is paired with the first version
+  # stanza that follows it, which is the one in its own block.
+  local pair_url pair_version pair_tag pairs_seen=0
+  while IFS='|' read -r pair_url pair_version; do
+    [ -n "$pair_url" ] || continue
+    pairs_seen=$((pairs_seen + 1))
+    case "$pair_url" in
+      "$ASSET_PREFIX"*) ;;
+      *)
+        echo "FAIL $rel: url does not download from $ASSET_PREFIX"
+        echo "     $pair_url"
+        failed=1
+        continue ;;
+    esac
+    pair_tag="${pair_url#"$ASSET_PREFIX"}"
+    pair_tag="${pair_tag%%/*}"
+    if [ -z "$pair_version" ]; then
+      echo "FAIL $rel: url has no version stanza in its block ($pair_tag)"
+      failed=1
+    elif [ "$pair_tag" != "v$pair_version" ]; then
+      echo "FAIL $rel: version \"$pair_version\" but url downloads from tag $pair_tag"
+      echo "     The license and checksum then describe a different build."
+      failed=1
+    else
+      echo "ok   $rel: version $pair_version agrees with tag $pair_tag"
+    fi
+  done <<EOF
+$(awk '
+    # A formula writes url before version; a cask writes version before url.
+    # Each value is CONSUMED when it is paired, so a version in one block can
+    # never be borrowed by a url in the next one.
+    /^[[:space:]]*url[[:space:]]+"/ {
+      match($0, /"[^"]*"/); u = substr($0, RSTART+1, RLENGTH-2)
+      if (held_version != "") { print u "|" held_version; held_version = "" }
+      else { held_url = u }
+      next
+    }
+    /^[[:space:]]*version[[:space:]]+"/ {
+      match($0, /"[^"]*"/); v = substr($0, RSTART+1, RLENGTH-2)
+      if (held_url != "") { print held_url "|" v; held_url = "" }
+      else { held_version = v }
+      next
+    }
+    END { if (held_url != "") print held_url "|" }
+  ' "$path")
+EOF
+  if [ "$pairs_seen" -eq 0 ]; then
+    echo "FAIL $rel: no url stanza found"
     failed=1
-  elif [ -n "$version" ]; then
-    echo "ok   $rel: version $version agrees with tag $tag"
   fi
 
   if ! printf '%s' "$sha" | grep -qE '^[0-9a-f]{64}$'; then

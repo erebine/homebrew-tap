@@ -12,10 +12,14 @@ the latest stable release of
 [Erebine/binaries](https://github.com/Erebine/binaries), and Homebrew
 resolves the runtime library dependencies.
 
-**Linux x86_64 only.** Erebine/binaries has shipped Linux x86_64 assets
-alone since v1.10.2, so the formulas declare `depends_on :linux` and
-Homebrew refuses to install them on macOS. Build from source in the
-platform repository if you need a macOS binary.
+**The two platforms are on different releases.** Linux x86_64 installs
+v2.0.0. macOS arm64 installs v1.10.0, because Erebine/binaries has shipped
+Linux x86_64 assets alone since v1.10.2 and v1.10.0 is the last release
+that carried a Darwin build. Each platform block therefore states the
+version it actually installs, rather than one version standing for both.
+
+macOS returns to the current release as soon as a release publishes Darwin
+assets again; only the url, version and sha256 in the `on_macos` block move.
 
 ## Getting Started
 
