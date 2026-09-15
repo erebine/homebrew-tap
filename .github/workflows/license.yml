@@ -1,0 +1,44 @@
+---
+# License compliance for this repository (work order WI-11).
+#
+# Runs on every pull request and every push to main, and fails the build when
+# a formula has no license stanza or one that does not name MIT, when a
+# formula's version disagrees with the tag its url downloads from, when the
+# formulas are not all pinned to the same version, when a url points outside
+# Erebine/binaries, when a checksum is not 64 hex digits, or when an SPDX
+# header or ASCII-only goes missing.
+#
+# Nothing here is resolved over the network: no release, no tag, no checksum
+# verification. Every invariant is an agreement between lines of the same
+# file, so a pull request is never gated on the state of the release process.
+# The script's own self-test runs first, so a check that has stopped checking
+# anything is reported before it is trusted.
+name: License
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  license:
+    name: License checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: License check self-tests
+        run: bash scripts/check-license.sh --self-test
+
+      - name: Formulas state the license of the build they download
+        run: bash scripts/check-license.sh
