@@ -11,14 +11,9 @@ cask "erebine-desktop" do
   homepage "https://erebine.ai"
 
   livecheck do
-    skip "No DMG has shipped since v1.10.1"
+    url :url
+    strategy :github_latest
   end
-
-  # v1.10.1 is the last release carrying a DMG; every release since is Linux
-  # x86_64 only. The pinned DMG still downloads, so the cask is deprecated
-  # rather than disabled: existing users keep a working install path and get
-  # told it is going nowhere.
-  deprecate! date: "2026-09-14", because: :discontinued
 
   depends_on arch: :arm64
   depends_on macos: ">= :sequoia"

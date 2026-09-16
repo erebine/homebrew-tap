@@ -64,10 +64,11 @@ done
 
 CASK="$HERE/../Casks/erebine-desktop.rb"
 echo "==> erebine-desktop cask (${TAG})"
-# No DMG has shipped since v1.10.1 and the cask is deprecated, so this
-# normally warns and moves on; it still re-pins if a release ever carries
-# a DMG again. The DMG file name carries the full tag
-# (Erebine-Desktop-v0.0.1.dmg), not the bare version.
+# Re-pins the cask when the release carries a DMG, and warns without failing
+# when it does not. The desktop app is macOS-only and is built on a Mac, so a
+# release cut on a Linux host alone has no DMG to pin -- that is why v2.0.0
+# and v2.0.1 carry none and v2.0.2 does. The DMG file name carries the full
+# tag (Erebine-Desktop-v0.0.1.dmg), not the bare version.
 if curl -fSL ${AUTH[@]+"${AUTH[@]}"} -o "$TMP/Erebine-Desktop.dmg" \
   "https://github.com/${REPO}/releases/download/${TAG}/Erebine-Desktop-${TAG}.dmg"; then
   sedi "s/^  version \".*\"/  version \"${VERSION}\"/" "$CASK"
