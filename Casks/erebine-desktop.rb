@@ -2,10 +2,10 @@
 # Prebuilt Erebine Desktop app from Erebine/binaries releases.
 # Pin to the latest stable release with scripts/update-formulas.sh.
 cask "erebine-desktop" do
-  version "2.0.2"
-  sha256 "70083e95bbab182bb99e1d2c2e8d80fcd4c620f9c1141e2fe2d2c781abd5d698"
+  version "2.2.0"
+  sha256 "15ea9a3edc2bafe5cb471084999bf9b81dca37d965b62dd410ed3326479da33b"
 
-  url "https://github.com/Erebine/binaries/releases/download/v2.0.2/Erebine-Desktop-v2.0.2.dmg"
+  url "https://github.com/Erebine/binaries/releases/download/v2.2.0/Erebine-Desktop-v2.2.0.dmg"
   name "Erebine Desktop"
   desc "Desktop app for the Erebine platform"
   homepage "https://erebine.ai"
