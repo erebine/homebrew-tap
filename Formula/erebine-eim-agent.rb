@@ -8,16 +8,16 @@ class ErebineEimAgent < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/Erebine/binaries/releases/download/v2.3.2/erebine-eim-agent-Darwin-arm64"
-      version "2.3.2"
-      sha256 "da50c5ebc364f8330f38ff22010f64f5c9638eabff256b93043b4cf49199a703"
+      url "https://github.com/Erebine/binaries/releases/download/v2.3.4/erebine-eim-agent-Darwin-arm64"
+      version "2.3.4"
+      sha256 "75e91e4b7d5f259c0ad4a0e0dc5e57cb29eb3b48debcd8e530c3c700d16df59d"
     end
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v2.3.3/erebine-eim-agent-Linux-x86_64"
-    version "2.3.3"
-    sha256 "ab3ead61e953608c40e7943b4f2d1c528d71ffc22236d2fbc545134644fc403a"
+    url "https://github.com/Erebine/binaries/releases/download/v2.3.4/erebine-eim-agent-Linux-x86_64"
+    version "2.3.4"
+    sha256 "4c9ad8e47fecb80ea72fbd6c1f00e1b19d7d8d4e0db696743974172e165816e7"
   end
 
   depends_on "zeromq"
