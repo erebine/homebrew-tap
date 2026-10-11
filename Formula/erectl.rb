@@ -15,9 +15,9 @@ class Erectl < Formula
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v2.4.0/erectl-Linux-x86_64"
-    version "2.4.0"
-    sha256 "899b3b6e91291112cd0061fa10722845553b0b988362985e71b857173f25e078"
+    url "https://github.com/Erebine/binaries/releases/download/v2.5.0/erectl-Linux-x86_64"
+    version "2.5.0"
+    sha256 "dfd325f916a4aa157e5d8e943482f45dde25b681b41a16ba4c00f60b960370eb"
   end
 
   depends_on "zstd"

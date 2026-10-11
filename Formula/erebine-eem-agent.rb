@@ -15,9 +15,9 @@ class ErebineEemAgent < Formula
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v2.4.0/erebine-eem-agent-Linux-x86_64"
-    version "2.4.0"
-    sha256 "af11f58b759fb2b28b4a7792ea6f2ee4c7155dd574feaa2d206a962a967a1c46"
+    url "https://github.com/Erebine/binaries/releases/download/v2.5.0/erebine-eem-agent-Linux-x86_64"
+    version "2.5.0"
+    sha256 "7449001be494a2e78a2b596ca2b610ed29d5a135232cb045d98d07c262ed6d73"
   end
 
   depends_on "zeromq"
