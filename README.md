@@ -33,8 +33,10 @@ brew install erebine/tap/erebine-eem
   installs it. Homebrew 6.0.0 and later load a formula from a tap outside
   Homebrew only once it is trusted, and installing by the fully qualified
   name is what trusts it.
-* Homebrew pulls in the `zeromq` and `zstd` libraries the EIM and EEM link
-  against.
+* Homebrew pulls in the libraries the binaries link against: `zeromq` and
+  `zstd`, and on Linux `curl`. On Linux the install points each binary at
+  Homebrew's copies, so it does not need the distribution's libzmq, libzstd
+  or libcurl.
 
 To use the short names (`brew install erectl`), trust the whole tap first:
 
@@ -47,9 +49,9 @@ brew trust erebine/tap
 
 | Formula | Installs | Platform | Dependencies |
 | --- | --- | --- | --- |
-| `erectl` | `erectl` | macOS arm64, Linux x86_64 and aarch64 | zstd |
+| `erectl` | `erectl` | macOS arm64, Linux x86_64 and aarch64 | zstd; curl on Linux |
 | `erebine-eim` | `erebine-eim`, linked as `erebine-eim-agent` | macOS arm64, Linux x86_64 and aarch64 | zeromq, zstd |
-| `erebine-eem` | `erebine-eem`, linked as `erebine-eem-agent` | macOS arm64, Linux x86_64 and aarch64 | zeromq, zstd |
+| `erebine-eem` | `erebine-eem`, linked as `erebine-eem-agent` | macOS arm64, Linux x86_64 and aarch64 | zeromq, zstd; curl on Linux |
 
 The EIM and EEM formulas were `erebine-eim-agent` and `erebine-eem-agent`
 before 2.10. Those names are now renames, listed in `formula_renames.json`,
