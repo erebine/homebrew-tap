@@ -23,20 +23,23 @@ reports the version your platform will get.
 ## Getting Started
 
 ``` shell
-brew tap erebine/tap
-brew install erectl
-brew install erebine-eim
-brew install erebine-eem
+brew install erebine/tap/erectl
+brew install erebine/tap/erebine-eim
+brew install erebine/tap/erebine-eem
 ```
 
-* The first command adds this tap.
-* The next three commands install the binaries; Homebrew pulls in the
-  `zeromq` and `zstd` libraries the EIM and EEM link against.
+* Each command adds this tap if it is missing, trusts that one formula and
+  installs it. Homebrew 6.0.0 and later load a formula from a tap outside
+  Homebrew only once it is trusted, and installing by the fully qualified
+  name is what trusts it.
+* Homebrew pulls in the `zeromq` and `zstd` libraries the EIM and EEM link
+  against.
 
-Single-command form:
+To use the short names (`brew install erectl`), trust the whole tap first:
 
 ``` shell
-brew install erebine/tap/erectl
+brew tap erebine/tap
+brew trust erebine/tap
 ```
 
 ## Packages
@@ -48,12 +51,19 @@ brew install erebine/tap/erectl
 | `erebine-eem` | `erebine-eem`, linked as `erebine-eem-agent` | macOS arm64, Linux x86_64 and aarch64 | zeromq, zstd |
 
 The EIM and EEM formulas were `erebine-eim-agent` and `erebine-eem-agent`
-before 2.10. Those names are now renames, listed in `formula_renames.json`:
-`brew install erebine-eim-agent` installs `erebine-eim`, and an existing
-`erebine-eim-agent` or `erebine-eem-agent` install is migrated to the new
-name by the next `brew update` or `brew upgrade`. Each formula also links
-its binary's old name to the new one, so scripts and service units that run
-`erebine-eim-agent` or `erebine-eem-agent` keep working.
+before 2.10. Those names are now renames, listed in `formula_renames.json`,
+and Homebrew trusts a formula by its current name only. An install made
+under an old name moves to the new one in either of two ways:
+
+* `brew upgrade erebine/tap/erebine-eim` (or `erebine/tap/erebine-eem`)
+  trusts the new formula, migrates the old install to it and upgrades it.
+* With the whole tap trusted (`brew trust erebine/tap`), the next
+  `brew upgrade` migrates it, and the old names install the new formulas.
+
+Until one of those runs, a plain `brew upgrade` leaves the old install as it
+is. Each formula also links its binary's old name to the new one, so
+scripts and service units that run `erebine-eim-agent` or
+`erebine-eem-agent` keep working.
 
 Documentation for running the binaries can be found in the
 [docs](https://erebine.ai/docs/private-agents).
@@ -66,7 +76,7 @@ The DMG is built and signed on a Mac, so it can lag the CI-built binaries;
 the cask is re-pinned only when the release has one.
 
 ``` shell
-brew install --cask erebine-desktop
+brew install --cask erebine/tap/erebine-desktop
 ```
 
 ## Updating formulas (maintainers)
