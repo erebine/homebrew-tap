@@ -53,6 +53,10 @@ brew trust erebine/tap
 | `erebine-eim` | `erebine-eim`, linked as `erebine-eim-agent` | macOS arm64, Linux x86_64 and aarch64 | zeromq, zstd |
 | `erebine-eem` | `erebine-eem`, linked as `erebine-eem-agent` | macOS arm64, Linux x86_64 and aarch64 | zeromq, zstd; curl on Linux |
 
+There is no Intel macOS build. On an Intel Mac each formula stops before it
+downloads the binary, with Homebrew's "The arm64 architecture is required
+for this software."
+
 The EIM and EEM formulas were `erebine-eim-agent` and `erebine-eem-agent`
 before 2.10. Those names are now renames, listed in `formula_renames.json`,
 and Homebrew trusts a formula by its current name only. An install made
@@ -95,7 +99,8 @@ git commit -am "pin formulas and cask to <version>"
 ```
 
 The script resolves the latest stable tag, downloads each asset, and
-rewrites the url and sha256 of the formula block that installs it, and the
+rewrites the url and sha256 of every formula block that installs it (on
+macOS, the on_arm block and the on_intel block that repeats it), and the
 version and sha256 of the cask (its url interpolates the version). An asset
 that is missing from the release is reported as a warning and its block is
 left untouched, so a partial release cannot half-pin the tap. A rewrite that

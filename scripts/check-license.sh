@@ -133,10 +133,11 @@ check_ruby_file() {
   # silently pass whatever the others say -- which is worse than failing,
   # because the build goes green while a url nobody looked at points at a
   # release that may not exist.
-  local url version sha tag blocks_seen=0
+  local url version sha tag blocks_seen=0 url_shas=""
   while IFS='|' read -r url version sha; do
     [ -n "$url$version$sha" ] || continue
     blocks_seen=$((blocks_seen + 1))
+    url_shas="$url_shas$url $sha"$'\n'
     if [ -z "$url" ]; then
       echo "FAIL $rel: a block states a version or sha256 but no url"
       failed=1
@@ -185,6 +186,16 @@ EOF2
     echo "FAIL $rel: no url stanza found"
     failed=1
   fi
+
+  # Two blocks may download the same asset (the macOS on_intel block repeats
+  # the on_arm one so an Intel Mac reaches the arm64 requirement); they must
+  # then vouch for it with the same checksum.
+  local split_url
+  for split_url in $(printf '%s' "$url_shas" |
+                     awk 'NF { if (($1 in s) && s[$1] != $2) print $1; s[$1] = $2 }' | sort -u); do
+    echo "FAIL $rel: blocks that download ${split_url##*/} disagree on its sha256"
+    failed=1
+  done
 
   if LC_ALL=C grep -q '[^[:print:][:space:]]' "$path"; then
     echo "FAIL $rel: non-ASCII bytes"
@@ -260,8 +271,9 @@ EOF
 # URL, a cask URL that interpolates a version it does not state, a partial
 # pin, a foreign download host, a placeholder checksum, a missing SPDX header
 # and a non-ASCII byte, and that the url, version and checksum checks reach a
-# formula's last platform block, not only its first. The formulas state no
-# version, as in the tap; the cask interpolates its own.
+# formula's last platform block, not only its first, and that the macOS
+# on_intel block that repeats the on_arm one moves and vouches with it. The
+# formulas state no version, as in the tap; the cask interpolates its own.
 self_test() {
   local tmp status=0 case_name
   tmp="$(mktemp -d)"
@@ -283,6 +295,10 @@ class Placeholder < Formula
 
   on_macos do
     on_arm do
+      url "${ASSET_PREFIX}v1.12.0/${name}-Darwin-arm64"
+      sha256 "8a6e4b0c56d9f0e4f3c1b2a7d5e6f8091a2b3c4d5e6f708192a3b4c5d6e7f809"
+    end
+    on_intel do
       url "${ASSET_PREFIX}v1.12.0/${name}-Darwin-arm64"
       sha256 "8a6e4b0c56d9f0e4f3c1b2a7d5e6f8091a2b3c4d5e6f708192a3b4c5d6e7f809"
     end
@@ -322,7 +338,8 @@ RB
   # from its url line to the stanza named.
   for case_name in no-license-stanza non-mit-license version-url-mismatch cask-no-version \
                    partial-pin foreign-host placeholder-sha no-spdx-header non-ascii \
-                   last-block-version-mismatch last-block-unpinned last-block-partial-pin; do
+                   last-block-version-mismatch last-block-unpinned last-block-partial-pin \
+                   macos-intel-block-behind macos-intel-block-sha-differs; do
     local bad="$tmp/$case_name"
     cp -r "$good" "$bad"
     local f="$bad/Formula/erectl.rb" cask="$bad/Casks/erebine-desktop.rb"
@@ -343,6 +360,11 @@ RB
       last-block-unpinned)
         sed -i "/Linux-aarch64/,/sha256/ s/sha256 \".*\"/sha256 \"$UNPINNED_SHA\"/" "$f" ;;
       last-block-partial-pin) sed -i '/Linux-aarch64/ s|/v1.13.0/|/v1.13.1/|' "$f" ;;
+      # The macOS on_intel block is the second Darwin-arm64 url in the file.
+      macos-intel-block-behind)
+        sed -i '/on_intel do/{n;/Darwin-arm64/ s|/v1.12.0/|/v1.11.0/|}' "$f" ;;
+      macos-intel-block-sha-differs)
+        sed -i '/on_intel do/{n;/Darwin-arm64/{n;s/sha256 "[0-9a-f]*"/sha256 "'"${UNPINNED_SHA//0/a}"'"/}}' "$f" ;;
     esac
     if check_tree "$bad" >/dev/null 2>&1; then
       echo "self-test FAIL $case_name should fail"

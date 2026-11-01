@@ -14,7 +14,16 @@ class ErebineEem < Formula
   uses_from_macos "curl"
 
   on_macos do
+    depends_on arch: :arm64
+
     on_arm do
+      url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eem-agent-Darwin-arm64"
+      sha256 "66ce69b1d68afc4ed2ff10c67372d5414c2218e78f39a26f59641791f833c487"
+    end
+    # There is no Intel macOS build. Homebrew loads a formula only when
+    # it has a url for the running system, so this repeats the arm64
+    # block and an Intel Mac stops on the arm64 requirement above.
+    on_intel do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eem-agent-Darwin-arm64"
       sha256 "66ce69b1d68afc4ed2ff10c67372d5414c2218e78f39a26f59641791f833c487"
     end

@@ -11,7 +11,16 @@ class Erectl < Formula
   uses_from_macos "curl"
 
   on_macos do
+    depends_on arch: :arm64
+
     on_arm do
+      url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erectl-Darwin-arm64"
+      sha256 "f1f73990fede37204282b13bf0924f1d276c109325c90730617c995bb5f10054"
+    end
+    # There is no Intel macOS build. Homebrew loads a formula only when
+    # it has a url for the running system, so this repeats the arm64
+    # block and an Intel Mac stops on the arm64 requirement above.
+    on_intel do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erectl-Darwin-arm64"
       sha256 "f1f73990fede37204282b13bf0924f1d276c109325c90730617c995bb5f10054"
     end

@@ -52,8 +52,11 @@ sha256() {
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-# Finds the block of a formula or cask whose url downloads an asset named by
-# MATCH_RE, and either rewrites it (mode=pin) or reports it (mode=read).
+# Finds every block of a formula or cask whose url downloads an asset named
+# by MATCH_RE, and either rewrites them (mode=pin) or reports them
+# (mode=read). The macOS arm64 asset has two blocks in each formula: on_arm,
+# and the on_intel block that repeats it so an Intel Mac stops on the formula's
+# arm64 requirement. Both move together.
 #
 # The block is the run of stanzas around that url line, bounded by a `do`
 # line, an `end` line, a `def`, the class line or another url. That is what
@@ -68,11 +71,12 @@ trap 'rm -rf "$TMP"' EXIT
 # in the url. The cask states its version, and its url interpolates it
 # (#{version}), so the url line is left as written and the version moves.
 #
-#   mode=pin   rewrites a literal url to URL, the block's version (if it has
-#              one) to VERSION and its sha256 to SUM, and prints the whole file.
-#   mode=read  prints "url|version|sha256" of the block as Homebrew resolves
-#              it -- #{version} substituted, and the version read from the
-#              url's tag when the block states none -- or "" if none.
+#   mode=pin   rewrites, in each such block, a literal url to URL, the version
+#              (if the block states one) to VERSION and the sha256 to SUM,
+#              and prints the whole file.
+#   mode=read  prints "url|version|sha256" for each such block as Homebrew
+#              resolves it -- #{version} substituted, and the version read
+#              from the url's tag when the block states none -- or "" if none.
 BLOCK_AWK='
   function value(s) { match(s, /"[^"]*"/); return substr(s, RSTART + 1, RLENGTH - 2) }
   function basename(u,    n, parts) { n = split(u, parts, "/"); return parts[n] }
@@ -92,25 +96,26 @@ BLOCK_AWK='
   { line[NR] = $0 }
   END {
     boundary = "^[[:space:]]*(url[[:space:]]|end([[:space:]]|$)|def[[:space:]]|class[[:space:]])|[[:space:]]do[[:space:]]*$"
-    hit = 0
+    n = 0
     for (i = 1; i <= NR; i++)
-      if (line[i] ~ /^[[:space:]]*url[[:space:]]+"/ && basename(value(line[i])) ~ match_re) hit = i
-    if (hit) {
+      if (line[i] ~ /^[[:space:]]*url[[:space:]]+"/ && basename(value(line[i])) ~ match_re) hits[++n] = i
+    for (k = 1; k <= n; k++) {
+      hit = hits[k]; got_version = ""; got_sha = ""
       if (mode == "pin" && index(line[hit], "#{") == 0) sub(/"[^"]*"/, "\"" url "\"", line[hit])
       for (i = hit - 1; i >= 1 && line[i] !~ boundary; i--) visit(i)
       for (i = hit + 1; i <= NR && line[i] !~ boundary; i++) visit(i)
+      if (mode == "read") {
+        u = value(line[hit]); gsub(/#[{]version[}]/, got_version, u)
+        print u "|" (got_version != "" ? got_version : tag_version(u)) "|" got_sha
+      }
     }
-    if (mode == "read") {
-      if (!hit) { print ""; exit }
-      u = value(line[hit]); gsub(/#[{]version[}]/, got_version, u)
-      print u "|" (got_version != "" ? got_version : tag_version(u)) "|" got_sha
-    }
+    if (mode == "read") { if (!n) print "" }
     else for (i = 1; i <= NR; i++) print line[i]
   }'
 
-# Downloads ASSET from the release and pins the block of FILE whose url names
-# it, then reads the block back and fails if it does not say exactly what was
-# written. A missing asset warns and leaves the block untouched, so a release
+# Downloads ASSET from the release and pins every block of FILE whose url
+# names it, then reads the blocks back and fails unless each says exactly what
+# was written. A missing asset warns and leaves the block untouched, so a release
 # that is still uploading, or that carries one platform only, can never leave
 # a block half-pinned to a checksum that was never computed.
 #   pin FILE MATCH_RE ASSET
@@ -126,8 +131,8 @@ pin() {
       -v version="$VERSION" -v sum="$sum" "$BLOCK_AWK" "$file" > "$TMP/rewrite"
   cat "$TMP/rewrite" > "$file"
   got="$(awk -v mode=read -v match_re="$match_re" "$BLOCK_AWK" "$file")"
-  if [ "$got" != "${url}|${VERSION}|${sum}" ]; then
-    echo "ERROR: ${file##*/}: the block whose url matches ${match_re} was not pinned." >&2
+  if [ -z "$got" ] || printf '%s\n' "$got" | grep -qvxF "${url}|${VERSION}|${sum}"; then
+    echo "ERROR: ${file##*/}: a block whose url matches ${match_re} was not pinned." >&2
     echo "       wanted: ${url}|${VERSION}|${sum}" >&2
     echo "       found:  ${got:-no such block}" >&2
     echo "       The file no longer has the layout this script rewrites; fix one or the other." >&2

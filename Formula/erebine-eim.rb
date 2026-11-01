@@ -12,7 +12,16 @@ class ErebineEim < Formula
   depends_on "zstd"
 
   on_macos do
+    depends_on arch: :arm64
+
     on_arm do
+      url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eim-agent-Darwin-arm64"
+      sha256 "6f6419cf27c3a292b8cf4e6211b326afb588b57434130844ac1d3418cbf80602"
+    end
+    # There is no Intel macOS build. Homebrew loads a formula only when
+    # it has a url for the running system, so this repeats the arm64
+    # block and an Intel Mac stops on the arm64 requirement above.
+    on_intel do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eim-agent-Darwin-arm64"
       sha256 "6f6419cf27c3a292b8cf4e6211b326afb588b57434130844ac1d3418cbf80602"
     end
