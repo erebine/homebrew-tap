@@ -6,6 +6,8 @@ class Erectl < Formula
   homepage "https://erebine.ai"
   license "MIT"
 
+  depends_on "zstd"
+
   on_macos do
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erectl-Darwin-arm64"
@@ -15,12 +17,17 @@ class Erectl < Formula
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erectl-Linux-x86_64"
-    version "2.9.1"
-    sha256 "acd0de971d905735d5ca58f8d09d63a5174b7b5a1cbbbb2e86f069cf791708ba"
+    on_intel do
+      url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erectl-Linux-x86_64"
+      version "2.9.1"
+      sha256 "acd0de971d905735d5ca58f8d09d63a5174b7b5a1cbbbb2e86f069cf791708ba"
+    end
+    on_arm do
+      url "https://github.com/Erebine/binaries/releases/download/v2.10.0/erectl-Linux-aarch64"
+      version "2.10.0"
+      sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+    end
   end
-
-  depends_on "zstd"
 
   def install
     bin.install Dir["erectl-*"].first => "erectl"

@@ -21,6 +21,13 @@
 # its siblings. The license stanza is then attached to a build it does not
 # describe, and the checksum vouches for a file the version does not name.
 #
+# A formula carries one block per platform (macOS arm64, Linux x86_64, Linux
+# aarch64), and update-formulas.sh pins each block on its own. So every check
+# of url, version and sha256 is made per block, and the version agreement
+# between formulas is made per platform. A block for a platform no release
+# has carried yet holds a sha256 of 64 zeros; it is reported as not pinned
+# until update-formulas.sh pins it.
+#
 # What this deliberately does NOT do
 # ----------------------------------
 # It resolves nothing over the network: no release, no tag, no checksum
@@ -52,10 +59,39 @@ ASSET_PREFIX="https://github.com/Erebine/binaries/releases/download/"
 # Erebine's own grant and may not disappear.
 REQUIRED_LICENSE="MIT"
 
-# Reads the value of a single-quoted-or-double-quoted stanza from a formula.
-#   stanza_value FILE NAME
-stanza_value() {
-  sed -n "s/^[[:space:]]*$2[[:space:]]\+\"\([^\"]*\)\".*/\1/p" "$1" | head -1
+# The sha256 a block carries until update-formulas.sh first pins it.
+UNPINNED_SHA="0000000000000000000000000000000000000000000000000000000000000000"
+
+# Prints "url|version|sha256" for every block of a formula or cask that
+# names any of the three. A block is the run of stanzas between a `do` line,
+# an `end` line, a `def`, the class line or a second url: the same block
+# scripts/update-formulas.sh rewrites, so what is checked here is what it
+# pins. A formula writes url before version, a cask writes version and
+# sha256 before url; either order is one block, and a value is never
+# borrowed by the next block.
+#   blocks FILE
+blocks() {
+  awk '
+    function value(s) { match(s, /"[^"]*"/); return substr(s, RSTART + 1, RLENGTH - 2) }
+    function flush() {
+      if (u != "" || v != "" || s != "") print u "|" v "|" s
+      u = ""; v = ""; s = ""
+    }
+    /^[[:space:]]*url[[:space:]]+"/ { if (u != "") flush(); u = value($0); next }
+    /^[[:space:]]*version[[:space:]]+"/ { v = value($0); next }
+    /^[[:space:]]*sha256[[:space:]]+"/ { s = value($0); next }
+    /^[[:space:]]*(end([[:space:]]|$)|def[[:space:]]|class[[:space:]])|[[:space:]]do[[:space:]]*$/ { flush() }
+    END { flush() }
+  ' "$1"
+}
+
+# The platform a release asset is built for: the last two dash-separated
+# fields of its name (erebine-eim-Linux-aarch64 -> Linux-aarch64).
+#   platform_of URL
+platform_of() {
+  local asset="${1##*/}" rest
+  rest="${asset%-*}"
+  printf '%s-%s\n' "${rest##*-}" "${asset##*-}"
 }
 
 # Checks one formula or cask file. WANT_LICENSE is 1 for formulas, 0 for
@@ -63,7 +99,6 @@ stanza_value() {
 #   check_ruby_file ROOT PATH WANT_LICENSE
 check_ruby_file() {
   local root="$1" path="$2" want_license="$3" rel="${2#"$1"/}" failed=0
-  local version url sha tag
 
   if ! grep -q '^# SPDX-License-Identifier:' "$path"; then
     echo "FAIL $rel: no SPDX-License-Identifier header"
@@ -87,90 +122,57 @@ check_ruby_file() {
     fi
   fi
 
-  version="$(stanza_value "$path" version)"
-  url="$(stanza_value "$path" url)"
-  sha="$(stanza_value "$path" sha256)"
-
-  if [ -z "$version" ]; then
-    echo "FAIL $rel: no version stanza"
-    failed=1
-  fi
-  if [ -z "$url" ]; then
-    echo "FAIL $rel: no url stanza"
-    failed=1
-    return "$failed"
-  fi
-
-  case "$url" in
-    "$ASSET_PREFIX"*) ;;
-    *)
-      echo "FAIL $rel: url does not download from $ASSET_PREFIX"
-      echo "     $url"
-      failed=1
-      return "$failed" ;;
-  esac
-
-  # .../releases/download/<tag>/<asset>, for EVERY url in the file.
+  # .../releases/download/<tag>/<asset>, for EVERY block in the file.
   #
-  # A formula may carry one url per platform, each in its own on_macos or
-  # on_linux block with its own version, because the platforms are not always
-  # released together. Reading only the first pair would check one block and
+  # A formula carries one url per platform, each in its own block with its
+  # own version and sha256, because the platforms are not always released
+  # together. Reading only the first block would check one platform and
   # silently pass whatever the others say -- which is worse than failing,
   # because the build goes green while a url nobody looked at points at a
-  # release that may not exist. Each url is paired with the first version
-  # stanza that follows it, which is the one in its own block.
-  local pair_url pair_version pair_tag pairs_seen=0
-  while IFS='|' read -r pair_url pair_version; do
-    [ -n "$pair_url" ] || continue
-    pairs_seen=$((pairs_seen + 1))
-    case "$pair_url" in
+  # release that may not exist.
+  local url version sha tag blocks_seen=0
+  while IFS='|' read -r url version sha; do
+    [ -n "$url$version$sha" ] || continue
+    blocks_seen=$((blocks_seen + 1))
+    if [ -z "$url" ]; then
+      echo "FAIL $rel: a block states a version or sha256 but no url"
+      failed=1
+      continue
+    fi
+    case "$url" in
       "$ASSET_PREFIX"*) ;;
       *)
         echo "FAIL $rel: url does not download from $ASSET_PREFIX"
-        echo "     $pair_url"
+        echo "     $url"
         failed=1
         continue ;;
     esac
-    pair_tag="${pair_url#"$ASSET_PREFIX"}"
-    pair_tag="${pair_tag%%/*}"
-    if [ -z "$pair_version" ]; then
-      echo "FAIL $rel: url has no version stanza in its block ($pair_tag)"
+    tag="${url#"$ASSET_PREFIX"}"
+    tag="${tag%%/*}"
+    if [ -z "$version" ]; then
+      echo "FAIL $rel: url has no version stanza in its block ($tag)"
       failed=1
-    elif [ "$pair_tag" != "v$pair_version" ]; then
-      echo "FAIL $rel: version \"$pair_version\" but url downloads from tag $pair_tag"
+    elif [ "$tag" != "v$version" ]; then
+      echo "FAIL $rel: version \"$version\" but url downloads from tag $tag"
       echo "     The license and checksum then describe a different build."
       failed=1
     else
-      echo "ok   $rel: version $pair_version agrees with tag $pair_tag"
+      echo "ok   $rel: version $version agrees with tag $tag"
     fi
-  done <<EOF
-$(awk '
-    # A formula writes url before version; a cask writes version before url.
-    # Each value is CONSUMED when it is paired, so a version in one block can
-    # never be borrowed by a url in the next one.
-    /^[[:space:]]*url[[:space:]]+"/ {
-      match($0, /"[^"]*"/); u = substr($0, RSTART+1, RLENGTH-2)
-      if (held_version != "") { print u "|" held_version; held_version = "" }
-      else { held_url = u }
-      next
-    }
-    /^[[:space:]]*version[[:space:]]+"/ {
-      match($0, /"[^"]*"/); v = substr($0, RSTART+1, RLENGTH-2)
-      if (held_url != "") { print held_url "|" v; held_url = "" }
-      else { held_version = v }
-      next
-    }
-    END { if (held_url != "") print held_url "|" }
-  ' "$path")
-EOF
-  if [ "$pairs_seen" -eq 0 ]; then
+    if [ "$sha" = "$UNPINNED_SHA" ]; then
+      echo "FAIL $rel: ${url##*/} is not pinned yet (sha256 is the zero placeholder)"
+      echo "     Run scripts/update-formulas.sh against a release that carries it."
+      failed=1
+    elif ! printf '%s' "$sha" | grep -qE '^[0-9a-f]{64}$'; then
+      echo "FAIL $rel: ${url##*/}: sha256 is not 64 lowercase hex digits"
+      echo "     \"$sha\""
+      failed=1
+    fi
+  done <<EOF2
+$(blocks "$path")
+EOF2
+  if [ "$blocks_seen" -eq 0 ]; then
     echo "FAIL $rel: no url stanza found"
-    failed=1
-  fi
-
-  if ! printf '%s' "$sha" | grep -qE '^[0-9a-f]{64}$'; then
-    echo "FAIL $rel: sha256 is not 64 lowercase hex digits"
-    echo "     \"$sha\""
     failed=1
   fi
 
@@ -185,7 +187,7 @@ EOF
 # Runs every check under ROOT. Prints one line per check and returns 0 when
 # all of them pass.
 check_tree() {
-  local root="$1" failed=0 file versions="" version
+  local root="$1" failed=0 file pins="" url version
 
   if [ -s "$root/LICENSE" ]; then
     echo "ok   LICENSE: present and non-empty"
@@ -201,23 +203,31 @@ check_tree() {
 
   for file in "$root"/Formula/*.rb; do
     check_ruby_file "$root" "$file" 1 || failed=1
-    version="$(stanza_value "$file" version)"
-    versions="$versions$version"$'\n'
+    while IFS='|' read -r url version _; do
+      [ -n "$url" ] || continue
+      pins="$pins$(platform_of "$url") $version"$'\n'
+    done <<EOF
+$(blocks "$file")
+EOF
   done
 
-  # update-formulas.sh leaves a formula untouched when its asset is missing
+  # update-formulas.sh leaves a block untouched when its asset is missing
   # from the release, so the formulas can silently end up on two versions.
-  local distinct
-  distinct="$(printf '%s' "$versions" | grep -v '^$' | sort -u | paste -sd' ' -)"
-  if [ "$(printf '%s' "$versions" | grep -cv '^$')" -gt 0 ] &&
-     [ "$(printf '%s' "$versions" | grep -v '^$' | sort -u | wc -l)" -ne 1 ]; then
-    echo "FAIL Formula/: formulas are pinned to different versions: $distinct"
-    echo "     A partial pin leaves one formula's license attached to an"
-    echo "     older build than its siblings."
-    failed=1
-  else
-    echo "ok   Formula/: every formula is pinned to the same version ($distinct)"
-  fi
+  # The platforms may differ (a release can carry Linux assets alone), but
+  # every formula's block for one platform must name the same release.
+  local platform distinct
+  for platform in $(printf '%s' "$pins" | awk 'NF { print $1 }' | sort -u); do
+    distinct="$(printf '%s' "$pins" | awk -v p="$platform" '$1 == p { print $2 }' |
+      sort -u | paste -sd' ' -)"
+    if [ "$(printf '%s\n' "$distinct" | wc -w)" -ne 1 ]; then
+      echo "FAIL Formula/: the $platform blocks are pinned to different versions: $distinct"
+      echo "     A partial pin leaves one formula's license attached to an"
+      echo "     older build than its siblings."
+      failed=1
+    else
+      echo "ok   Formula/: every $platform block is pinned to the same version ($distinct)"
+    fi
+  done
 
   # Casks carry no license stanza; only the version/URL agreement is checked.
   if compgen -G "$root/Casks/*.rb" >/dev/null; then
@@ -232,26 +242,47 @@ check_tree() {
 # Builds fixture trees and proves the check fails on a missing license
 # stanza, a license that is not MIT, a version that disagrees with its URL, a
 # partial pin, a foreign download host, a placeholder checksum, a missing
-# SPDX header and a non-ASCII byte.
+# SPDX header and a non-ASCII byte, and that the url, version and checksum
+# checks reach a formula's last platform block, not only its first.
 self_test() {
   local tmp status=0 case_name
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' RETURN
 
+  # The macOS blocks sit a release behind the Linux ones, as after a release
+  # that carried Linux assets alone: that is a valid pin.
   local good="$tmp/good"
   mkdir -p "$good/Formula" "$good/Casks"
   printf 'MIT License\n' >"$good/LICENSE"
   local name
-  for name in erectl erebine-eim-agent; do
+  for name in erectl erebine-eim; do
     cat >"$good/Formula/$name.rb" <<RB
 # SPDX-License-Identifier: MIT
 class Placeholder < Formula
   desc "Erebine"
   homepage "https://erebine.ai"
-  url "${ASSET_PREFIX}v1.13.0/${name}-Linux-x86_64"
-  version "1.13.0"
-  sha256 "59d8df8f74d5bdfaa57b236a4cbea8e6a7b9d0d934b2df22f7ae01b5aad84a2c"
   license "MIT"
+
+  on_macos do
+    on_arm do
+      url "${ASSET_PREFIX}v1.12.0/${name}-Darwin-arm64"
+      version "1.12.0"
+      sha256 "8a6e4b0c56d9f0e4f3c1b2a7d5e6f8091a2b3c4d5e6f708192a3b4c5d6e7f809"
+    end
+  end
+
+  on_linux do
+    on_intel do
+      url "${ASSET_PREFIX}v1.13.0/${name}-Linux-x86_64"
+      version "1.13.0"
+      sha256 "59d8df8f74d5bdfaa57b236a4cbea8e6a7b9d0d934b2df22f7ae01b5aad84a2c"
+    end
+    on_arm do
+      url "${ASSET_PREFIX}v1.13.0/${name}-Linux-aarch64"
+      version "1.13.0"
+      sha256 "3f1e2d4c5b6a79880716f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0"
+    end
+  end
 end
 RB
   done
@@ -265,15 +296,18 @@ end
 RB
 
   if check_tree "$good" >/dev/null; then
-    echo "self-test ok   formulas at one version, and a cask pinned elsewhere, pass"
+    echo "self-test ok   formulas at one version per platform, and a cask pinned elsewhere, pass"
   else
     echo "self-test FAIL the good fixture should pass"
     check_tree "$good" || true
     status=1
   fi
 
+  # The last-block cases edit only the Linux aarch64 block: the range runs
+  # from its url line to the stanza named.
   for case_name in no-license-stanza non-mit-license version-url-mismatch \
-                   partial-pin foreign-host placeholder-sha no-spdx-header non-ascii; do
+                   partial-pin foreign-host placeholder-sha no-spdx-header non-ascii \
+                   last-block-version-mismatch last-block-unpinned last-block-partial-pin; do
     local bad="$tmp/$case_name"
     cp -r "$good" "$bad"
     local f="$bad/Formula/erectl.rb"
@@ -285,9 +319,16 @@ RB
         sed -i -e 's/version "1.13.0"/version "1.10.2"/' -e 's|/v1.13.0/|/v1.10.2/|' "$f" ;;
       foreign-host)
         sed -i 's|https://github.com/Erebine/binaries|https://example.invalid/mirror|' "$f" ;;
-      placeholder-sha)     sed -i 's/^  sha256 ".*"/  sha256 "TODO"/' "$f" ;;
+      placeholder-sha)     sed -i '/Linux-aarch64/,/sha256/ s/sha256 ".*"/sha256 "TODO"/' "$f" ;;
       no-spdx-header)      sed -i '1d' "$f" ;;
       non-ascii)           printf '# Copyright \302\251 2026\n' >>"$f" ;;
+      last-block-version-mismatch)
+        sed -i '/Linux-aarch64/,/version/ s/version "1.13.0"/version "1.13.1"/' "$f" ;;
+      last-block-unpinned)
+        sed -i "/Linux-aarch64/,/sha256/ s/sha256 \".*\"/sha256 \"$UNPINNED_SHA\"/" "$f" ;;
+      last-block-partial-pin)
+        sed -i -e '/Linux-aarch64/ s|/v1.13.0/|/v1.13.1/|' \
+               -e '/Linux-aarch64/,/version/ s/version "1.13.0"/version "1.13.1"/' "$f" ;;
     esac
     if check_tree "$bad" >/dev/null 2>&1; then
       echo "self-test FAIL $case_name should fail"

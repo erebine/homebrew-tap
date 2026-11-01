@@ -6,12 +6,17 @@
 # url, version and sha256 in Formula/*.rb and Casks/*.rb. Run after each
 # release, then commit the result.
 #
-# Each formula carries one block per platform (on_macos/on_arm and on_linux)
-# and each block states its own url, version and sha256, because the two
-# platforms have not always been released together: v2.0.0 and v2.0.1 shipped
-# Linux x86_64 assets alone. Each block is therefore pinned on its own. A
-# release that carries the Linux asset but not the Darwin one moves the
+# Each formula carries one block per platform (on_macos/on_arm,
+# on_linux/on_intel and on_linux/on_arm) and each block states its own url,
+# version and sha256, because the platforms have not always been released
+# together: v2.0.0 and v2.0.1 shipped Linux x86_64 assets alone, and Linux
+# aarch64 assets start at v2.10.0. Each block is therefore pinned on its own.
+# A release that carries the Linux asset but not the Darwin one moves the
 # Linux block and leaves the macOS block on the release it already names.
+# A block for a platform no release has carried yet names the first release
+# expected to carry it, with a sha256 of 64 zeros; it is pinned by the first
+# run against a release that has its asset, and scripts/check-license.sh
+# fails until then.
 #
 # Env:
 #   TAG       release tag to pin (default: latest stable release)
@@ -116,10 +121,14 @@ pin() {
   echo "    ${asset}: ${sum}"
 }
 
-for name in erectl erebine-eim-agent erebine-eem-agent; do
+# erebine-eim and erebine-eem were erebine-eim-agent and erebine-eem-agent
+# before 2.10, and releases from 2.10 publish both names. A block that still
+# downloads the old name is the same platform's block, so it is matched too
+# and moves to the new name with the first release that carries it.
+for name in erectl erebine-eim erebine-eem; do
   echo "==> ${name} (${TAG})"
-  for asset in "${name}-Darwin-arm64" "${name}-Linux-x86_64"; do
-    pin "$FORMULAE/${name}.rb" "^${asset}\$" "$asset"
+  for platform in Darwin-arm64 Linux-x86_64 Linux-aarch64; do
+    pin "$FORMULAE/${name}.rb" "^${name}(-agent)?-${platform}\$" "${name}-${platform}"
   done
 done
 
