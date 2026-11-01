@@ -8,16 +8,16 @@ class Erectl < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/Erebine/binaries/releases/download/v2.6.0/erectl-Darwin-arm64"
-      version "2.6.0"
-      sha256 "8e6824ed37fa35962b435872756e52dd9ec3f2e33600769ff57e8ff9b7f138b2"
+      url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erectl-Darwin-arm64"
+      version "2.9.1"
+      sha256 "f1f73990fede37204282b13bf0924f1d276c109325c90730617c995bb5f10054"
     end
   end
 
   on_linux do
-    url "https://github.com/Erebine/binaries/releases/download/v2.6.0/erectl-Linux-x86_64"
-    version "2.6.0"
-    sha256 "a5c20fdf10ee66ad3982012bd43f323ebe7cf1f2d6914bf6d997cf6535d75cd8"
+    url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erectl-Linux-x86_64"
+    version "2.9.1"
+    sha256 "acd0de971d905735d5ca58f8d09d63a5174b7b5a1cbbbb2e86f069cf791708ba"
   end
 
   depends_on "zstd"
