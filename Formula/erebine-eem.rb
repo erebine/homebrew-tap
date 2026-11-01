@@ -11,6 +11,8 @@ class ErebineEem < Formula
   depends_on "zeromq"
   depends_on "zstd"
 
+  uses_from_macos "curl"
+
   on_macos do
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eem-agent-Darwin-arm64"
@@ -20,6 +22,8 @@ class ErebineEem < Formula
   end
 
   on_linux do
+    depends_on "patchelf" => :build
+
     on_intel do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eem-agent-Linux-x86_64"
       version "2.9.1"
@@ -33,7 +37,15 @@ class ErebineEem < Formula
   end
 
   def install
-    bin.install Dir["erebine-eem-*"].first => "erebine-eem"
+    binary = Dir["erebine-eem-*"].first
+    # The Linux build finds libzmq, libzstd and libcurl by soname in the loader's
+    # default path, where Homebrew's are not: add their opt directories to
+    # its RUNPATH, after the $ORIGIN the build set.
+    if OS.linux?
+      rpath = %w[zeromq zstd curl].map { |dep| formula_opt_lib(dep) }.join(":")
+      system "patchelf", "--add-rpath", rpath, binary
+    end
+    bin.install binary => "erebine-eem"
     # The pre-2.10 name, for the units and scripts that still call it.
     bin.install_symlink "erebine-eem" => "erebine-eem-agent"
   end
