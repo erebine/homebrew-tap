@@ -24,9 +24,12 @@
 # A formula carries one block per platform (macOS arm64, Linux x86_64, Linux
 # aarch64), and update-formulas.sh pins each block on its own. So every check
 # of url, version and sha256 is made per block, and the version agreement
-# between formulas is made per platform. A block for a platform no release
-# has carried yet holds a sha256 of 64 zeros; it is reported as not pinned
-# until update-formulas.sh pins it.
+# between formulas is made per platform. A formula block states no version:
+# Homebrew reads it from the release tag in the url, so the tag is the
+# version compared across formulas. A block that does state one (the cask,
+# whose url interpolates #{version}) must agree with the tag its url resolves
+# to. A block for a platform no release has carried yet holds a sha256 of 64
+# zeros; it is reported as not pinned until update-formulas.sh pins it.
 #
 # What this deliberately does NOT do
 # ----------------------------------
@@ -147,11 +150,18 @@ check_ruby_file() {
         failed=1
         continue ;;
     esac
+    if [[ "$url" == *'#{version}'* ]]; then
+      if [ -z "$version" ]; then
+        echo "FAIL $rel: url interpolates #{version} but its block states no version"
+        failed=1
+        continue
+      fi
+      url="${url//'#{version}'/$version}"
+    fi
     tag="${url#"$ASSET_PREFIX"}"
     tag="${tag%%/*}"
     if [ -z "$version" ]; then
-      echo "FAIL $rel: url has no version stanza in its block ($tag)"
-      failed=1
+      echo "ok   $rel: version ${tag#v} from tag $tag"
     elif [ "$tag" != "v$version" ]; then
       echo "FAIL $rel: version \"$version\" but url downloads from tag $tag"
       echo "     The license and checksum then describe a different build."
@@ -204,7 +214,13 @@ check_tree() {
   for file in "$root"/Formula/*.rb; do
     check_ruby_file "$root" "$file" 1 || failed=1
     while IFS='|' read -r url version _; do
-      [ -n "$url" ] || continue
+      # A url from elsewhere is already reported above; it has no tag here.
+      case "$url" in "$ASSET_PREFIX"*) ;; *) continue ;; esac
+      if [ -z "$version" ]; then
+        version="${url#"$ASSET_PREFIX"}"
+        version="${version%%/*}"
+        version="${version#v}"
+      fi
       pins="$pins$(platform_of "$url") $version"$'\n'
     done <<EOF
 $(blocks "$file")
@@ -240,10 +256,12 @@ EOF
 }
 
 # Builds fixture trees and proves the check fails on a missing license
-# stanza, a license that is not MIT, a version that disagrees with its URL, a
-# partial pin, a foreign download host, a placeholder checksum, a missing
-# SPDX header and a non-ASCII byte, and that the url, version and checksum
-# checks reach a formula's last platform block, not only its first.
+# stanza, a license that is not MIT, a cask version that disagrees with its
+# URL, a cask URL that interpolates a version it does not state, a partial
+# pin, a foreign download host, a placeholder checksum, a missing SPDX header
+# and a non-ASCII byte, and that the url, version and checksum checks reach a
+# formula's last platform block, not only its first. The formulas state no
+# version, as in the tap; the cask interpolates its own.
 self_test() {
   local tmp status=0 case_name
   tmp="$(mktemp -d)"
@@ -266,7 +284,6 @@ class Placeholder < Formula
   on_macos do
     on_arm do
       url "${ASSET_PREFIX}v1.12.0/${name}-Darwin-arm64"
-      version "1.12.0"
       sha256 "8a6e4b0c56d9f0e4f3c1b2a7d5e6f8091a2b3c4d5e6f708192a3b4c5d6e7f809"
     end
   end
@@ -274,12 +291,10 @@ class Placeholder < Formula
   on_linux do
     on_intel do
       url "${ASSET_PREFIX}v1.13.0/${name}-Linux-x86_64"
-      version "1.13.0"
       sha256 "59d8df8f74d5bdfaa57b236a4cbea8e6a7b9d0d934b2df22f7ae01b5aad84a2c"
     end
     on_arm do
       url "${ASSET_PREFIX}v1.13.0/${name}-Linux-aarch64"
-      version "1.13.0"
       sha256 "3f1e2d4c5b6a79880716f5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0"
     end
   end
@@ -291,7 +306,7 @@ RB
 cask "erebine-desktop" do
   version "1.10.1"
   sha256 "c43f26ba9189f3ab62f6e55537020e6164905d19d5c60eb7062624766662c111"
-  url "${ASSET_PREFIX}v1.10.1/Erebine-Desktop-v1.10.1.dmg"
+  url "${ASSET_PREFIX}v#{version}/Erebine-Desktop-v#{version}.dmg"
 end
 RB
 
@@ -305,30 +320,29 @@ RB
 
   # The last-block cases edit only the Linux aarch64 block: the range runs
   # from its url line to the stanza named.
-  for case_name in no-license-stanza non-mit-license version-url-mismatch \
+  for case_name in no-license-stanza non-mit-license version-url-mismatch cask-no-version \
                    partial-pin foreign-host placeholder-sha no-spdx-header non-ascii \
                    last-block-version-mismatch last-block-unpinned last-block-partial-pin; do
     local bad="$tmp/$case_name"
     cp -r "$good" "$bad"
-    local f="$bad/Formula/erectl.rb"
+    local f="$bad/Formula/erectl.rb" cask="$bad/Casks/erebine-desktop.rb"
     case "$case_name" in
       no-license-stanza)   sed -i '/^  license /d' "$f" ;;
       non-mit-license)     sed -i 's/license "MIT"/license "GPL-3.0-only"/' "$f" ;;
-      version-url-mismatch) sed -i 's|/v1.13.0/|/v1.10.2/|' "$f" ;;
-      partial-pin)
-        sed -i -e 's/version "1.13.0"/version "1.10.2"/' -e 's|/v1.13.0/|/v1.10.2/|' "$f" ;;
+      version-url-mismatch)
+        sed -i 's|v#{version}/Erebine-Desktop-v#{version}|v1.10.2/Erebine-Desktop-v1.10.2|' "$cask" ;;
+      cask-no-version)     sed -i '/^  version /d' "$cask" ;;
+      partial-pin)         sed -i 's|/v1.13.0/|/v1.10.2/|' "$f" ;;
       foreign-host)
         sed -i 's|https://github.com/Erebine/binaries|https://example.invalid/mirror|' "$f" ;;
       placeholder-sha)     sed -i '/Linux-aarch64/,/sha256/ s/sha256 ".*"/sha256 "TODO"/' "$f" ;;
       no-spdx-header)      sed -i '1d' "$f" ;;
       non-ascii)           printf '# Copyright \302\251 2026\n' >>"$f" ;;
       last-block-version-mismatch)
-        sed -i '/Linux-aarch64/,/version/ s/version "1.13.0"/version "1.13.1"/' "$f" ;;
+        sed -i '/Linux-aarch64/a\      version "1.13.1"' "$f" ;;
       last-block-unpinned)
         sed -i "/Linux-aarch64/,/sha256/ s/sha256 \".*\"/sha256 \"$UNPINNED_SHA\"/" "$f" ;;
-      last-block-partial-pin)
-        sed -i -e '/Linux-aarch64/ s|/v1.13.0/|/v1.13.1/|' \
-               -e '/Linux-aarch64/,/version/ s/version "1.13.0"/version "1.13.1"/' "$f" ;;
+      last-block-partial-pin) sed -i '/Linux-aarch64/ s|/v1.13.0/|/v1.13.1/|' "$f" ;;
     esac
     if check_tree "$bad" >/dev/null 2>&1; then
       echo "self-test FAIL $case_name should fail"

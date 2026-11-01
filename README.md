@@ -13,12 +13,13 @@ Erebine Inference Microservice (EIM), and the Erebine Execution Manager
 resolves the runtime library dependencies.
 
 Each formula carries one block per platform, macOS arm64, Linux x86_64 and
-Linux aarch64, and each block states the url, version and sha256 it actually
-installs. The platforms have not always been released together (v2.0.0 and
-v2.0.1 shipped Linux x86_64 assets alone, and Linux aarch64 builds start at
-v2.10.0), so a block only moves to a release that carries its asset and
-otherwise stays on the release it already names. `brew info <formula>`
-reports the version your platform will get.
+Linux aarch64, and each block states the url and sha256 it actually
+installs; the release tag in the url is the version. The platforms have not
+always been released together (v2.0.0 and v2.0.1 shipped Linux x86_64 assets
+alone, and Linux aarch64 builds start at v2.10.0), so a block only moves to
+a release that carries its asset and otherwise stays on the release it
+already names. `brew info <formula>` reports the version your platform will
+get.
 
 ## Getting Started
 
@@ -92,12 +93,13 @@ git commit -am "pin formulas and cask to <version>"
 ```
 
 The script resolves the latest stable tag, downloads each asset, and
-rewrites the url, version and sha256 of the platform block that installs
-it, in `Formula/` and `Casks/`. An asset that is missing from the release
-is reported as a warning and its block is left untouched, so a partial
-release cannot half-pin the tap. A rewrite that does not take, because a
-formula's layout no longer matches what the script expects, fails the run
-rather than committing a formula that names one build and installs another.
+rewrites the url and sha256 of the formula block that installs it, and the
+version and sha256 of the cask (its url interpolates the version). An asset
+that is missing from the release is reported as a warning and its block is
+left untouched, so a partial release cannot half-pin the tap. A rewrite that
+does not take, because a formula's layout no longer matches what the script
+expects, fails the run rather than committing a formula that names one build
+and installs another.
 
 A block for a platform no release has carried yet names the first release
 expected to carry it, with a sha256 of 64 zeros (Linux aarch64 until

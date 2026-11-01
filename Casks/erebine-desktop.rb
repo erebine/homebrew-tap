@@ -5,7 +5,7 @@ cask "erebine-desktop" do
   version "2.9.1"
   sha256 "1703cbda5e9297c87a9ff14c0fa6d8bd49ccc90c376076fc1b9fe6d18944493d"
 
-  url "https://github.com/Erebine/binaries/releases/download/v2.9.1/Erebine-Desktop-v2.9.1.dmg"
+  url "https://github.com/Erebine/binaries/releases/download/v#{version}/Erebine-Desktop-v#{version}.dmg"
   name "Erebine"
   desc "Desktop app for the Erebine platform"
   homepage "https://erebine.ai/"

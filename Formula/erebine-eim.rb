@@ -14,7 +14,6 @@ class ErebineEim < Formula
   on_macos do
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eim-agent-Darwin-arm64"
-      version "2.9.1"
       sha256 "6f6419cf27c3a292b8cf4e6211b326afb588b57434130844ac1d3418cbf80602"
     end
   end
@@ -24,12 +23,10 @@ class ErebineEim < Formula
 
     on_intel do
       url "https://github.com/Erebine/binaries/releases/download/v2.9.1/erebine-eim-agent-Linux-x86_64"
-      version "2.9.1"
       sha256 "065c3aee06d15ab2ac96d94d42966f262ff557b707ec04a9dc56d1331fe640a4"
     end
     on_arm do
       url "https://github.com/Erebine/binaries/releases/download/v2.10.0/erebine-eim-Linux-aarch64"
-      version "2.10.0"
       sha256 "0000000000000000000000000000000000000000000000000000000000000000"
     end
   end

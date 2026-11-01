@@ -2,15 +2,17 @@
 # SPDX-License-Identifier: MIT
 # Pin every formula and the cask to the latest stable Erebine/binaries release.
 #
-# Resolves the latest release tag, downloads each asset, and rewrites the
-# url, version and sha256 in Formula/*.rb and Casks/*.rb. Run after each
-# release, then commit the result.
+# Resolves the latest release tag, downloads each asset, and rewrites each
+# formula block's url and sha256 (Homebrew reads the version from the url's
+# release tag) and the cask's version and sha256 (its url interpolates the
+# version). Run after each release, then commit the result.
 #
 # Each formula carries one block per platform (on_macos/on_arm,
-# on_linux/on_intel and on_linux/on_arm) and each block states its own url,
-# version and sha256, because the platforms have not always been released
-# together: v2.0.0 and v2.0.1 shipped Linux x86_64 assets alone, and Linux
-# aarch64 assets start at v2.10.0. Each block is therefore pinned on its own.
+# on_linux/on_intel and on_linux/on_arm), and each block states its own url,
+# whose release tag is its version, and sha256, because the platforms have
+# not always been released together: v2.0.0 and v2.0.1 shipped Linux x86_64
+# assets alone, and Linux aarch64 assets start at v2.10.0. Each block is
+# therefore pinned on its own.
 # A release that carries the Linux asset but not the Darwin one moves the
 # Linux block and leaves the macOS block on the release it already names.
 # A block for a platform no release has carried yet names the first release
@@ -55,19 +57,28 @@ trap 'rm -rf "$TMP"' EXIT
 #
 # The block is the run of stanzas around that url line, bounded by a `do`
 # line, an `end` line, a `def`, the class line or another url. That is what
-# makes it work whether the url comes before the version (formulas) or after
-# it (the cask), at any indentation, and it is why the on_macos block is never
-# touched when the on_linux block is pinned. Nothing here anchors on a fixed
-# number of leading spaces: an expression that anchored on two spaces is how
-# this script once moved every url to a new release while leaving every
+# makes it work whether the url comes before the sha256 (formulas) or after
+# the version (the cask), at any indentation, and it is why the on_macos block
+# is never touched when the on_linux block is pinned. Nothing here anchors on
+# a fixed number of leading spaces: an expression that anchored on two spaces
+# is how this script once moved every url to a new release while leaving every
 # version and checksum behind, and still exited 0.
 #
-#   mode=pin   rewrites the url to URL and the block's version and sha256
-#              to VERSION and SUM, and prints the whole file.
-#   mode=read  prints "url|version|sha256" of the block, or "" if none.
+# A formula block states no version: Homebrew reads it from the release tag
+# in the url. The cask states its version, and its url interpolates it
+# (#{version}), so the url line is left as written and the version moves.
+#
+#   mode=pin   rewrites a literal url to URL, the block's version (if it has
+#              one) to VERSION and its sha256 to SUM, and prints the whole file.
+#   mode=read  prints "url|version|sha256" of the block as Homebrew resolves
+#              it -- #{version} substituted, and the version read from the
+#              url's tag when the block states none -- or "" if none.
 BLOCK_AWK='
   function value(s) { match(s, /"[^"]*"/); return substr(s, RSTART + 1, RLENGTH - 2) }
   function basename(u,    n, parts) { n = split(u, parts, "/"); return parts[n] }
+  function tag_version(u) {
+    sub(/^.*\/releases\/download\//, "", u); sub(/\/.*$/, "", u); sub(/^v/, "", u); return u
+  }
   function visit(i) {
     if (line[i] ~ /^[[:space:]]*version[[:space:]]+"/) {
       if (mode == "pin") sub(/"[^"]*"/, "\"" version "\"", line[i])
@@ -85,11 +96,15 @@ BLOCK_AWK='
     for (i = 1; i <= NR; i++)
       if (line[i] ~ /^[[:space:]]*url[[:space:]]+"/ && basename(value(line[i])) ~ match_re) hit = i
     if (hit) {
-      if (mode == "pin") sub(/"[^"]*"/, "\"" url "\"", line[hit])
+      if (mode == "pin" && index(line[hit], "#{") == 0) sub(/"[^"]*"/, "\"" url "\"", line[hit])
       for (i = hit - 1; i >= 1 && line[i] !~ boundary; i--) visit(i)
       for (i = hit + 1; i <= NR && line[i] !~ boundary; i++) visit(i)
     }
-    if (mode == "read") { if (hit) print value(line[hit]) "|" got_version "|" got_sha; else print "" }
+    if (mode == "read") {
+      if (!hit) { print ""; exit }
+      u = value(line[hit]); gsub(/#[{]version[}]/, got_version, u)
+      print u "|" (got_version != "" ? got_version : tag_version(u)) "|" got_sha
+    }
     else for (i = 1; i <= NR; i++) print line[i]
   }'
 
