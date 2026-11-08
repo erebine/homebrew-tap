@@ -2,8 +2,8 @@
 # Prebuilt Erebine app (Erebine.app) from Erebine/binaries releases.
 # Pin to the latest stable release with scripts/update-formulas.sh.
 cask "erebine-desktop" do
-  version "3.2.0"
-  sha256 "4fa047ccff53f76142faf948f20459ff3e8f94f3fc000fe7c93f88273e468d4d"
+  version "3.2.1"
+  sha256 "0884753c2249c7442c70c98460761040b19aa3e5685ca3cddfd8e22641235587"
 
   url "https://github.com/Erebine/binaries/releases/download/v#{version}/Erebine-Desktop-v#{version}.dmg"
   name "Erebine"
