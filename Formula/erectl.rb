@@ -14,15 +14,15 @@ class Erectl < Formula
     depends_on arch: :arm64
 
     on_arm do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.1/erectl-Darwin-arm64"
-      sha256 "eb5fa8f752acd80159630b1cbfb46cc07f4a5647762da86186fa3138de69ac0a"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.2/erectl-Darwin-arm64"
+      sha256 "188ed6c0a0cb2142f3707fa3fed56e738a7845191aee801dd6fe0771eef43980"
     end
     # There is no Intel macOS build. Homebrew loads a formula only when
     # it has a url for the running system, so this repeats the arm64
     # block and an Intel Mac stops on the arm64 requirement above.
     on_intel do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.1/erectl-Darwin-arm64"
-      sha256 "eb5fa8f752acd80159630b1cbfb46cc07f4a5647762da86186fa3138de69ac0a"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.2/erectl-Darwin-arm64"
+      sha256 "188ed6c0a0cb2142f3707fa3fed56e738a7845191aee801dd6fe0771eef43980"
     end
   end
 
@@ -30,12 +30,12 @@ class Erectl < Formula
     depends_on "patchelf" => :build
 
     on_intel do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.1/erectl-Linux-x86_64"
-      sha256 "22c01dc1311692ce0a5d3ab61f8a01e0fa32faeeecb6ce4b03390a32024e8ac0"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.2/erectl-Linux-x86_64"
+      sha256 "43559014efadb4da01e93650f247832b95ae4661943d8f5f24db9b05dc631b70"
     end
     on_arm do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.1/erectl-Linux-aarch64"
-      sha256 "39552eb30adcabe72599afc24f0d18d1c6ae754a1f4979cc7f9b6602e664b09f"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.2/erectl-Linux-aarch64"
+      sha256 "a9a2a6ee86658071927c4122889f593aa336c5d5280d4300a508166ca947b6b3"
     end
   end
 
