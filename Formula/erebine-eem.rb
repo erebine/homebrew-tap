@@ -17,15 +17,15 @@ class ErebineEem < Formula
     depends_on arch: :arm64
 
     on_arm do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.8/erebine-eem-Darwin-arm64"
-      sha256 "6193d42a998ef22434764ea3277f2127603d0c5576fd04bf6b493bb0bca075c7"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.9/erebine-eem-Darwin-arm64"
+      sha256 "9aa6df528da513ecbc8700e7c121b5e90ad2d59c0e78d1d7f8a5d96c47f80c4e"
     end
     # There is no Intel macOS build. Homebrew loads a formula only when
     # it has a url for the running system, so this repeats the arm64
     # block and an Intel Mac stops on the arm64 requirement above.
     on_intel do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.8/erebine-eem-Darwin-arm64"
-      sha256 "6193d42a998ef22434764ea3277f2127603d0c5576fd04bf6b493bb0bca075c7"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.9/erebine-eem-Darwin-arm64"
+      sha256 "9aa6df528da513ecbc8700e7c121b5e90ad2d59c0e78d1d7f8a5d96c47f80c4e"
     end
   end
 
@@ -33,12 +33,12 @@ class ErebineEem < Formula
     depends_on "patchelf" => :build
 
     on_intel do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.8/erebine-eem-Linux-x86_64"
-      sha256 "1d8c61abc794bb74d91375167b13b8cc53fe5b9bcaf6eda1b17aeda3bfabe4e2"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.9/erebine-eem-Linux-x86_64"
+      sha256 "89ba696090d5d2b787b63fec61aa7c22858c59d7035b8198ced62c7e770a00f0"
     end
     on_arm do
-      url "https://github.com/Erebine/binaries/releases/download/v3.3.8/erebine-eem-Linux-aarch64"
-      sha256 "6123d1bf629f82339482964a97ed313a2bedbcf5d7fc847af8269e03d3a61c82"
+      url "https://github.com/Erebine/binaries/releases/download/v3.3.9/erebine-eem-Linux-aarch64"
+      sha256 "6516a3f97bdaf87bee52eb9a2a5af320dccde3ec9bdc9d4796eb0a7c4d0a48e2"
     end
   end
 
